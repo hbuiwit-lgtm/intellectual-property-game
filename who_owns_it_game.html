@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Who Owns It? – IP & Copyright Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Outfit:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #faf7f2;
+    --ink: #1a1628;
+    --surface: #ffffff;
+    --border: #e8e2d9;
+    --copyright:  #e63946;
+    --trademark:  #f4a261;
+    --fairuse:    #2a9d8f;
+    --cc:         #457b9d;
+    --pubdomain:  #6a4c93;
+    --correct: #22c55e;
+    --wrong:   #ef4444;
+    --warn:    #f59e0b;
+    --muted:   #9e97b8;
+    --radius:  16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Warm paper texture bg */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      radial-gradient(circle at 8% 15%, rgba(230,57,70,0.06) 0%, transparent 35%),
+      radial-gradient(circle at 92% 80%, rgba(106,76,147,0.07) 0%, transparent 35%),
+      radial-gradient(circle at 50% 50%, rgba(42,157,143,0.04) 0%, transparent 60%);
+    pointer-events: none; z-index: 0;
+  }
+
+  .screen { display: none; position: relative; z-index: 1; }
+  .screen.active { display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 28px 16px 60px; }
+
+  /* ══════════ INTRO ══════════ */
+  #screen-intro { justify-content: center; text-align: center; }
+
+  .intro-standard {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--muted); border: 1px solid var(--border);
+    background: var(--surface); padding: 5px 18px; border-radius: 99px;
+    display: inline-block; margin-bottom: 22px;
+  }
+
+  .intro-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(42px, 8vw, 88px);
+    font-weight: 900; line-height: 0.92;
+    letter-spacing: -2px; margin-bottom: 6px;
+  }
+  .intro-title .t1 { color: var(--ink); display: block; }
+  .intro-title .t2 { color: var(--copyright); display: block; }
+  .intro-title .t3 {
+    color: var(--ink); display: block;
+    font-size: 0.42em; letter-spacing: 0; font-weight: 700; margin-top: 10px;
+    font-family: 'Outfit', sans-serif;
+  }
+
+  .intro-desc {
+    font-size: 15px; font-weight: 500; color: var(--muted);
+    max-width: 500px; margin: 16px auto 28px; line-height: 1.7;
+  }
+
+  /* Category legend */
+  .cat-legend {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    justify-content: center; margin-bottom: 32px; max-width: 580px;
+  }
+  .cat-pill {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 99px; border: 1.5px solid;
+    font-size: 12px; font-weight: 700; font-family: 'DM Mono', monospace;
+    letter-spacing: 0.04em;
+  }
+  .cat-pill.cp { border-color: var(--copyright); color: var(--copyright); background: rgba(230,57,70,0.07); }
+  .cat-pill.tm { border-color: var(--trademark); color: var(--trademark); background: rgba(244,162,97,0.09); }
+  .cat-pill.fu { border-color: var(--fairuse); color: var(--fairuse); background: rgba(42,157,143,0.08); }
+  .cat-pill.cc { border-color: var(--cc); color: var(--cc); background: rgba(69,123,157,0.08); }
+  .cat-pill.pd { border-color: var(--pubdomain); color: var(--pubdomain); background: rgba(106,76,147,0.08); }
+
+  /* Student form */
+  .student-form {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+    width: 100%; max-width: 460px;
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px; margin-bottom: 24px;
+    box-shadow: 0 4px 20px rgba(26,22,40,0.06);
+  }
+  .sf-group { display: flex; flex-direction: column; gap: 5px; }
+  .sf-group label { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+  .sf-group input {
+    padding: 9px 12px; background: var(--bg);
+    border: 1.5px solid var(--border); border-radius: 8px;
+    font-family: 'Outfit', sans-serif; font-size: 13px; color: var(--ink); outline: none;
+    transition: border-color 0.18s;
+  }
+  .sf-group input:focus { border-color: var(--cc); }
+
+  .start-btn {
+    padding: 16px 52px;
+    background: var(--ink); border: none; border-radius: 99px;
+    font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 800;
+    color: white; cursor: pointer; letter-spacing: 0.04em;
+    transition: all 0.2s;
+    box-shadow: 0 6px 24px rgba(26,22,40,0.2);
+  }
+  .start-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(26,22,40,0.28); }
+
+  /* ══════════ QUIZ ══════════ */
+  #screen-quiz { justify-content: flex-start; }
+
+  /* HUD */
+  .hud {
+    width: 100%; max-width: 720px;
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 22px; flex-wrap: wrap;
+  }
+  .hud-badge {
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 99px; padding: 6px 14px;
+    font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted);
+    display: flex; align-items: center; gap: 5px;
+  }
+  .hud-badge strong { color: var(--ink); }
+  .hud-bar { flex: 1; min-width: 100px; height: 7px; background: var(--border); border-radius: 99px; overflow: hidden; }
+  .hud-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--copyright), var(--pubdomain)); transition: width 0.4s ease; }
+
+  /* Question card */
+  .q-wrap { width: 100%; max-width: 720px; }
+  .q-card {
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 20px; overflow: hidden;
+    box-shadow: 0 8px 32px rgba(26,22,40,0.08);
+    animation: cardSlide 0.32s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  @keyframes cardSlide {
+    from { opacity: 0; transform: translateY(20px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* Card top bar */
+  .q-top {
+    padding: 12px 22px; border-bottom: 1.5px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(26,22,40,0.02);
+  }
+  .q-num { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 0.1em; }
+  .q-type-badge {
+    font-size: 10px; font-family: 'DM Mono', monospace; font-weight: 600;
+    padding: 3px 10px; border-radius: 99px; letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .type-scenario { background: rgba(26,22,40,0.07); color: var(--ink); }
+  .type-quickfire { background: rgba(244,162,97,0.15); color: var(--trademark); border: 1px solid rgba(244,162,97,0.4); }
+  .type-truefalse { background: rgba(42,157,143,0.12); color: var(--fairuse); border: 1px solid rgba(42,157,143,0.3); }
+
+  .q-body { padding: 26px 24px 22px; }
+
+  /* Scenario card mockup */
+  .scenario-bubble {
+    background: var(--bg); border: 1.5px solid var(--border);
+    border-radius: 14px; padding: 16px 18px; margin-bottom: 18px;
+    position: relative;
+  }
+  .scenario-bubble .sb-who {
+    font-size: 10px; font-family: 'DM Mono', monospace; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;
+  }
+  .scenario-bubble .sb-text {
+    font-size: 16px; font-weight: 600; line-height: 1.6; color: var(--ink);
+  }
+  .scenario-bubble .sb-text .flag {
+    background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.35);
+    border-radius: 4px; padding: 1px 6px; color: var(--warn);
+    font-family: 'DM Mono', monospace; font-size: 0.85em;
+  }
+
+  .q-prompt {
+    font-size: 13px; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.09em;
+    font-family: 'DM Mono', monospace; margin-bottom: 12px;
+  }
+
+  /* Answer buttons */
+  .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 480px) { .choices { grid-template-columns: 1fr; } }
+
+  .choice-btn {
+    padding: 13px 15px; background: var(--bg);
+    border: 1.5px solid var(--border); border-radius: 12px;
+    cursor: pointer; transition: all 0.15s; text-align: left;
+    display: flex; align-items: center; gap: 11px;
+    font-family: 'Outfit', sans-serif;
+  }
+  .choice-btn:hover:not(:disabled) { border-color: var(--ink); background: var(--surface); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(26,22,40,0.08); }
+  .choice-btn:disabled { cursor: default; }
+  .choice-btn.correct { border-color: var(--correct) !important; background: rgba(34,197,94,0.08) !important; transform: none; }
+  .choice-btn.wrong   { border-color: var(--wrong) !important; background: rgba(239,68,68,0.07) !important; }
+  .choice-btn.dimmed  { opacity: 0.3; }
+
+  .ch-dot {
+    width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 16px;
+    transition: all 0.15s;
+  }
+  .ch-dot.cp { background: rgba(230,57,70,0.12); }
+  .ch-dot.tm { background: rgba(244,162,97,0.14); }
+  .ch-dot.fu { background: rgba(42,157,143,0.12); }
+  .ch-dot.cc { background: rgba(69,123,157,0.12); }
+  .ch-dot.pd { background: rgba(106,76,147,0.12); }
+  .ch-dot.tf { background: rgba(26,22,40,0.08); font-size: 20px; }
+
+  .ch-text { flex: 1; }
+  .ch-name  { font-size: 14px; font-weight: 800; display: block; }
+  .ch-sub   { font-size: 11px; color: var(--muted); font-weight: 500; display: block; margin-top: 1px; }
+
+  /* True/False special layout */
+  .choices.tf-layout { grid-template-columns: 1fr 1fr; }
+  .tf-btn {
+    padding: 20px 10px; justify-content: center; flex-direction: column;
+    text-align: center; gap: 6px;
+  }
+  .tf-btn .ch-dot { margin: 0 auto; width: 44px; height: 44px; font-size: 24px; }
+
+  /* Feedback */
+  .feedback {
+    display: none; margin-top: 16px; padding: 14px 16px;
+    border-radius: 12px; border: 1.5px solid;
+    animation: fbIn 0.22s ease both;
+  }
+  @keyframes fbIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .feedback.show { display: block; }
+  .feedback.fb-c { border-color: rgba(34,197,94,0.4); background: rgba(34,197,94,0.07); }
+  .feedback.fb-w { border-color: rgba(239,68,68,0.35); background: rgba(239,68,68,0.06); }
+
+  .fb-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .fb-icon { font-size: 20px; }
+  .fb-verdict { font-size: 15px; font-weight: 800; }
+  .fb-verdict.c { color: var(--correct); }
+  .fb-verdict.w { color: var(--wrong); }
+  .fb-explain { font-size: 13px; color: #6b7280; line-height: 1.6; }
+  .fb-clue { margin-top: 8px; font-size: 11.5px; font-family: 'DM Mono', monospace; color: var(--muted); }
+  .fb-clue strong { color: var(--warn); }
+
+  .next-btn {
+    display: none; margin-top: 16px; width: 100%;
+    padding: 13px; background: var(--ink); border: none; border-radius: 12px;
+    font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 800;
+    color: white; cursor: pointer; letter-spacing: 0.03em; transition: all 0.15s;
+  }
+  .next-btn:hover { background: #2d2640; }
+  .next-btn.show { display: block; }
+
+  /* Streak pop */
+  .streak-pop {
+    display: none; position: fixed; top: 18px; right: 18px;
+    background: var(--warn); color: #000; padding: 8px 18px;
+    border-radius: 99px; font-family: 'Outfit', monospace;
+    font-size: 13px; font-weight: 800; z-index: 200;
+    animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  @keyframes popIn { from { opacity:0; transform: scale(0.5) translateY(-14px); } to { opacity:1; transform: scale(1) translateY(0); } }
+
+  /* ══════════ RESULTS ══════════ */
+  #screen-results { text-align: center; }
+
+  .results-eyebrow { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 12px; }
+
+  .results-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(30px, 6vw, 58px); font-weight: 900; line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .results-sub { font-size: 14px; color: var(--muted); font-weight: 600; margin-bottom: 28px; }
+
+  /* Score donut */
+  .donut-wrap { position: relative; width: 150px; height: 150px; margin: 0 auto 22px; }
+  .donut-wrap svg { position: absolute; top:0; left:0; transform: rotate(-90deg); }
+  .donut-inner { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .donut-num { font-family: 'Playfair Display', serif; font-size: 40px; font-weight: 900; }
+  .donut-label { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+
+  .grade-display { font-family: 'Playfair Display', serif; font-size: 44px; font-weight: 900; margin-bottom: 4px; }
+  .grade-msg { font-size: 14px; color: var(--muted); font-weight: 500; max-width: 420px; margin: 0 auto 28px; line-height: 1.6; }
+
+  /* Category breakdown */
+  .breakdown {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
+    max-width: 680px; width: 100%; margin-bottom: 24px;
+  }
+  @media (max-width: 600px) { .breakdown { grid-template-columns: 1fr 1fr; } }
+
+  .bd-item {
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 12px; padding: 12px 10px; text-align: center;
+    box-shadow: 0 2px 8px rgba(26,22,40,0.05);
+  }
+  .bd-emoji { font-size: 22px; margin-bottom: 4px; display: block; }
+  .bd-label { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; display: block; margin-bottom: 6px; }
+  .bd-bar-wrap { height: 5px; background: var(--border); border-radius: 99px; overflow: hidden; margin: 4px 0; }
+  .bd-bar { height: 100%; border-radius: 99px; width: 0%; transition: width 1s ease; }
+  .bd-score { font-size: 12px; font-family: 'DM Mono', monospace; color: var(--muted); }
+
+  /* Missed review */
+  .missed-section { width: 100%; max-width: 620px; margin-bottom: 22px; text-align: left; }
+  .missed-head { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 10px; }
+  .missed-item {
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; font-size: 12px;
+    box-shadow: 0 2px 6px rgba(26,22,40,0.04);
+  }
+  .missed-q { color: #6b7280; line-height: 1.5; margin-bottom: 5px; }
+  .missed-ans { display: flex; gap: 16px; flex-wrap: wrap; }
+  .missed-yours   { color: var(--wrong); font-family: 'DM Mono', monospace; font-size: 11px; }
+  .missed-correct { color: var(--correct); font-family: 'DM Mono', monospace; font-size: 11px; }
+
+  .result-btns { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 20px; }
+  .r-btn-primary {
+    padding: 13px 34px; background: var(--ink); border: none; border-radius: 99px;
+    font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 800; color: white;
+    cursor: pointer; transition: all 0.18s;
+    box-shadow: 0 4px 16px rgba(26,22,40,0.18);
+  }
+  .r-btn-primary:hover { transform: translateY(-2px); }
+  .r-btn-ghost {
+    padding: 13px 34px; background: transparent; border: 1.5px solid var(--border);
+    border-radius: 99px; font-family: 'Outfit', sans-serif; font-size: 14px;
+    font-weight: 700; color: var(--muted); cursor: pointer; transition: all 0.18s;
+  }
+  .r-btn-ghost:hover { border-color: var(--ink); color: var(--ink); }
+
+  /* Teacher box */
+  .teacher-box {
+    width: 100%; max-width: 580px;
+    background: rgba(245,158,11,0.05); border: 1.5px solid rgba(245,158,11,0.22);
+    border-radius: 14px; padding: 18px 20px; text-align: left;
+    box-shadow: 0 2px 8px rgba(26,22,40,0.04);
+  }
+  .tb-head { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--warn); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 12px; }
+  .tb-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 12px; }
+  @media (max-width: 440px) { .tb-grid { grid-template-columns: 1fr 1fr; } }
+  .tb-box { background: var(--surface); border: 1.5px solid var(--border); border-radius: 8px; padding: 10px; text-align: center; }
+  .tb-box-label { font-size: 9px; font-family: 'DM Mono', monospace; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 4px; }
+  .tb-box input { width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--border); color: var(--warn); font-family: 'DM Mono', monospace; font-size: 18px; font-weight: 700; text-align: center; outline: none; padding: 2px 0; }
+  .tb-note label { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 6px; }
+  .tb-note textarea { width: 100%; background: var(--bg); border: 1.5px solid var(--border); border-radius: 8px; color: var(--ink); font-family: 'Outfit', sans-serif; font-size: 13px; padding: 10px 12px; resize: vertical; min-height: 60px; outline: none; }
+
+  @media print {
+    body::before { display: none; }
+    .r-btn-primary, .r-btn-ghost { display: none; }
+    .q-card, .breakdown { box-shadow: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="streak-pop" id="streak-pop"></div>
+
+<!-- ══════════════════ INTRO ══════════════════ -->
+<div class="screen active" id="screen-intro">
+  <div class="intro-standard">Standard 6-8.CAS.b.2-4 · Week 3</div>
+  <h1 class="intro-title">
+    <span class="t1">WHO</span>
+    <span class="t2">OWNS IT?</span>
+    <span class="t3">The IP & Copyright Challenge</span>
+  </h1>
+  <p class="intro-desc">
+    15 questions. Real-world situations. Can you spot the difference between
+    Copyright, Trademark, Fair Use, Creative Commons, and Public Domain?
+  </p>
+  <div class="cat-legend">
+    <div class="cat-pill cp">© Copyright</div>
+    <div class="cat-pill tm">™ Trademark</div>
+    <div class="cat-pill fu">⚖️ Fair Use</div>
+    <div class="cat-pill cc">🌐 Creative Commons</div>
+    <div class="cat-pill pd">🗽 Public Domain</div>
+  </div>
+  <div class="student-form">
+    <div class="sf-group"><label>Your Name</label><input type="text" id="s-name" placeholder="First Last"></div>
+    <div class="sf-group"><label>Partner (optional)</label><input type="text" id="s-partner" placeholder="First Last"></div>
+    <div class="sf-group"><label>Period</label><input type="text" id="s-period" placeholder="Period 3"></div>
+    <div class="sf-group"><label>Date</label><input type="text" id="s-date" placeholder="MM/DD/YYYY"></div>
+  </div>
+  <button class="start-btn" onclick="startGame()">PLAY NOW →</button>
+</div>
+
+<!-- ══════════════════ QUIZ ══════════════════ -->
+<div class="screen" id="screen-quiz">
+  <div class="hud" id="hud">
+    <div class="hud-badge">Q <strong id="hud-q">1</strong> / 15</div>
+    <div class="hud-bar"><div class="hud-fill" id="hud-fill" style="width:0%"></div></div>
+    <div class="hud-badge">✅ <strong id="hud-score">0</strong></div>
+    <div class="hud-badge">🔥 <strong id="hud-streak">0</strong></div>
+  </div>
+
+  <div class="q-wrap">
+    <div class="q-card" id="q-card">
+      <div class="q-top">
+        <span class="q-num" id="q-num">QUESTION 01 / 15</span>
+        <span class="q-type-badge type-scenario" id="q-type-badge">Scenario</span>
+      </div>
+      <div class="q-body">
+        <div class="scenario-bubble" id="q-bubble">
+          <div class="sb-who" id="q-who"></div>
+          <div class="sb-text" id="q-text"></div>
+        </div>
+        <div class="q-prompt" id="q-prompt">What type of IP protection applies here?</div>
+        <div class="choices" id="choices"></div>
+        <div class="feedback" id="feedback">
+          <div class="fb-row">
+            <span class="fb-icon" id="fb-icon"></span>
+            <span class="fb-verdict" id="fb-verdict"></span>
+          </div>
+          <div class="fb-explain" id="fb-explain"></div>
+          <div class="fb-clue" id="fb-clue"></div>
+        </div>
+        <button class="next-btn" id="next-btn" onclick="nextQ()">Next Question →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ RESULTS ══════════════════ -->
+<div class="screen" id="screen-results">
+  <div class="results-eyebrow">Mission Complete</div>
+  <div class="results-title" id="r-title"></div>
+  <div class="results-sub" id="r-sub"></div>
+
+  <div class="donut-wrap">
+    <svg width="150" height="150" viewBox="0 0 150 150">
+      <circle cx="75" cy="75" r="62" fill="none" stroke="#e8e2d9" stroke-width="10"/>
+      <circle cx="75" cy="75" r="62" fill="none" stroke-width="10"
+        stroke-linecap="round"
+        stroke-dasharray="389.6" stroke-dashoffset="389.6"
+        id="donut-circle" style="transition: stroke-dashoffset 1.2s ease, stroke 0.5s ease"/>
+    </svg>
+    <div class="donut-inner">
+      <div class="donut-num" id="donut-num">0</div>
+      <div class="donut-label">/ 15</div>
+    </div>
+  </div>
+
+  <div class="grade-display" id="r-grade"></div>
+  <div class="grade-msg" id="r-msg"></div>
+
+  <div class="breakdown" id="breakdown"></div>
+
+  <div class="missed-section" id="missed-section"></div>
+
+  <div class="result-btns">
+    <button class="r-btn-primary" onclick="retryGame()">↩ Play Again</button>
+    <button class="r-btn-ghost" onclick="window.print()">🖨 Print Results</button>
+  </div>
+
+  <div class="teacher-box">
+    <div class="tb-head">📝 Teacher Use Only</div>
+    <div class="tb-grid">
+      <div class="tb-box"><span class="tb-box-label">Score /15</span><input id="t-score" type="text" placeholder="—"></div>
+      <div class="tb-box"><span class="tb-box-label">Percent</span><input id="t-pct" type="text" placeholder="—"></div>
+      <div class="tb-box"><span class="tb-box-label">Grade</span><input id="t-grade" type="text" placeholder="—"></div>
+    </div>
+    <div class="tb-note">
+      <label>Comments</label>
+      <textarea placeholder="Feedback for the student..."></textarea>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Categories ────────────────────────────────────────────────────────────
+const CATS = {
+  copyright:  { key:'copyright',  label:'Copyright',       emoji:'©',  cls:'cp', color:'var(--copyright)', sub:'All rights reserved' },
+  trademark:  { key:'trademark',  label:'Trademark',       emoji:'™',  cls:'tm', color:'var(--trademark)', sub:'Brand & logo protection' },
+  fairuse:    { key:'fairuse',    label:'Fair Use',        emoji:'⚖️', cls:'fu', color:'var(--fairuse)',   sub:'Limited use without permission' },
+  cc:         { key:'cc',         label:'Creative Commons',emoji:'🌐', cls:'cc', color:'var(--cc)',        sub:'Some rights reserved' },
+  pubdomain:  { key:'pubdomain',  label:'Public Domain',   emoji:'🗽', cls:'pd', color:'var(--pubdomain)', sub:'No restrictions — use freely' },
+  true:       { key:'true',       label:'TRUE',            emoji:'✅', cls:'tf', color:'var(--correct)',   sub:'' },
+  false:      { key:'false',      label:'FALSE',           emoji:'❌', cls:'tf', color:'var(--wrong)',     sub:'' },
+};
+
+// ── Questions (15) ────────────────────────────────────────────────────────
+const ALL_QUESTIONS = [
+  // ── SCENARIO QUESTIONS (identify the category) ──────────────────────
+  {
+    type: 'scenario', diff: 'easy',
+    who: '🎨 Student Designer',
+    text: 'Maya just finished drawing an original logo for her made-up sneaker brand "NovaDrift" in her sketchbook. She hasn\'t filed any paperwork or paid any fees. Is her logo legally protected?',
+    prompt: 'What type of protection does Maya\'s logo automatically have?',
+    answer: 'copyright',
+    choices: ['copyright','trademark','cc','pubdomain'],
+    explain: 'Copyright is automatic! The moment Maya created that original design, it was protected by copyright — no filing, no fee, no registration needed. Her creative work belongs to her.',
+    clue: 'Key concept: Copyright protects original creative works the moment they are created.'
+  },
+  {
+    type: 'scenario', diff: 'easy',
+    who: '🍔 Fast Food Chain',
+    text: 'You see two golden arches on a sign and instantly think "McDonald\'s." The company has legally registered this symbol so no other business can use it. What type of IP protection is this?',
+    prompt: 'What protects a brand\'s logo and name from being copied by competitors?',
+    answer: 'trademark',
+    choices: ['copyright','trademark','fairuse','pubdomain'],
+    explain: 'That\'s a Trademark! Trademarks protect brand identifiers — names, logos, slogans — that distinguish one company\'s products from another\'s. The Golden Arches are one of the most recognized trademarks in the world.',
+    clue: 'Key concept: Trademarks protect brand identity and must be registered to get full protection.'
+  },
+  {
+    type: 'scenario', diff: 'easy',
+    who: '📚 English Teacher',
+    text: 'Mr. Reyes prints out two pages from a published novel to use as an example of descriptive writing in his 7th grade class. He does not ask the publisher for permission. Is this okay?',
+    prompt: 'What legal concept likely protects Mr. Reyes here?',
+    answer: 'fairuse',
+    choices: ['copyright','trademark','fairuse','cc'],
+    explain: 'This is likely Fair Use! Using a small portion of a copyrighted work for educational, non-commercial purposes is one of the clearest examples of fair use. Courts have consistently supported classroom use of limited excerpts.',
+    clue: 'Key concept: Educational use + small amount + non-commercial = strong Fair Use case.'
+  },
+  {
+    type: 'scenario', diff: 'easy',
+    who: '📸 Photographer',
+    text: 'Dani finds a beautiful photo of a sunset on Unsplash.com. The photo has a CC0 license. She wants to use it as the background in her YouTube banner. Can she?',
+    prompt: 'What type of license makes this photo freely usable?',
+    answer: 'pubdomain',
+    choices: ['copyright','cc','pubdomain','fairuse'],
+    explain: 'CC0 means the creator has dedicated their work to the Public Domain — waiving all rights. It\'s essentially "no rights reserved." Dani can use it for anything, even commercially, with no credit required.',
+    clue: 'Key concept: CC0 license = Public Domain equivalent. Completely free to use.'
+  },
+  {
+    type: 'scenario', diff: 'medium',
+    who: '🎵 Music Blogger',
+    text: 'Jordan writes a detailed review of a new Taylor Swift album and includes short 15-second clips of three different songs to illustrate her points. She posts it on her free blog with no ads.',
+    prompt: 'What legal concept best protects Jordan\'s use of the song clips?',
+    answer: 'fairuse',
+    choices: ['copyright','fairuse','cc','pubdomain'],
+    explain: 'This is a strong Fair Use case. Jordan uses small clips (not full songs) for commentary/criticism — one of the classic fair use purposes. Her blog is non-commercial and the clips don\'t replace buying the album. All four fair use factors favor her.',
+    clue: 'Key concept: Commentary + small amount + non-commercial + doesn\'t hurt sales = Fair Use.'
+  },
+  {
+    type: 'scenario', diff: 'medium',
+    who: '🖼️ Graphic Design Student',
+    text: 'Carlos finds a stunning photo on Flickr that is labeled "CC BY-NC 2.0." He wants to use it in his school portfolio website. He adds a credit line with the photographer\'s name. Can he use it?',
+    prompt: 'What type of license is this, and can Carlos use it for school?',
+    answer: 'cc',
+    choices: ['copyright','trademark','fairuse','cc'],
+    explain: 'This is a Creative Commons license! "BY" means he must credit the photographer (which he did), and "NC" means Non-Commercial only. A school portfolio is non-commercial, so Carlos is good — as long as he keeps the credit.',
+    clue: 'Key concept: CC BY-NC = free to use if you credit the creator AND don\'t use it commercially.'
+  },
+  {
+    type: 'scenario', diff: 'medium',
+    who: '🎮 Game Developer',
+    text: 'A small game studio creates a character that wears a red hat and overalls and jumps on mushrooms. Nintendo\'s lawyers send them a cease-and-desist letter claiming it copies Mario.',
+    prompt: 'What type of IP protection is Nintendo most likely invoking?',
+    answer: 'copyright',
+    choices: ['copyright','trademark','fairuse','pubdomain'],
+    explain: 'Nintendo would primarily use Copyright here — Mario\'s character design, art style, and visual expression are protected creative works. They might also use Trademark for the Mario name/brand. Copying a character\'s distinctive visual design is copyright infringement.',
+    clue: 'Key concept: Character designs, artwork, and visual expression are protected by Copyright.'
+  },
+  {
+    type: 'scenario', diff: 'medium',
+    who: '👗 Fashion Designer',
+    text: 'A new clothing company called "Adibas" starts selling shoes with three stripes — almost identical to Adidas\'s logo. Adidas sues them immediately.',
+    prompt: 'What type of IP protection is Adidas using to stop the copycat brand?',
+    answer: 'trademark',
+    choices: ['copyright','trademark','fairuse','cc'],
+    explain: 'This is a Trademark infringement case! Adidas\'s three-stripe logo is one of their most famous registered trademarks. Using a nearly identical symbol on competing products is classic trademark infringement — it confuses consumers about who made the product.',
+    clue: 'Key concept: Trademarks stop competitors from using confusingly similar brand symbols.'
+  },
+  {
+    type: 'scenario', diff: 'hard',
+    who: '📹 YouTube Creator',
+    text: 'A YouTuber makes a 20-minute video that is just the entire new Beyoncé album playing while a slideshow of album artwork is shown. They say it\'s "just for fans" and they\'re not making money from it.',
+    prompt: 'Is this Fair Use?',
+    answer: 'copyright',
+    choices: ['copyright','fairuse','cc','pubdomain'],
+    explain: 'This is Copyright infringement, NOT Fair Use! Using the entire album (100% of the work) directly substitutes for the real product and harms sales/streams. "Not making money" and "just for fans" are not valid Fair Use defenses. All four fair use factors go against this creator.',
+    clue: 'Key concept: Using 100% of a work almost never qualifies as Fair Use, even with no profit motive.'
+  },
+  {
+    type: 'scenario', diff: 'hard',
+    who: '📖 Researcher',
+    text: 'An art historian downloads high-resolution scans of paintings by Leonardo da Vinci from a museum website. All the original paintings were created in the 1490s. She uses them in her published book.',
+    prompt: 'What best describes the copyright status of these Leonardo da Vinci paintings?',
+    answer: 'pubdomain',
+    choices: ['copyright','trademark','cc','pubdomain'],
+    explain: 'Leonardo da Vinci\'s paintings are Public Domain! Copyright expires — in the US, anything created before 1928 is in the public domain. Since Leonardo died in 1519, his works have been freely usable for centuries. (Note: the museum\'s photographs of the works may have their own copyright — that\'s a different debate!)',
+    clue: 'Key concept: Works created long ago (before 1928 in the US) are in the Public Domain.'
+  },
+
+  // ── TRUE / FALSE QUESTIONS ────────────────────────────────────────────
+  {
+    type: 'truefalse', diff: 'easy',
+    who: '❓ True or False',
+    text: 'You must register your work with the government and pay a fee before copyright protection begins.',
+    prompt: 'Is this statement TRUE or FALSE?',
+    answer: 'false',
+    choices: ['true','false'],
+    explain: 'FALSE! Copyright is automatic. Your work is protected the moment you create it — no registration, no fee, no paperwork required. Registration can help if you ever need to sue someone, but it\'s NOT required for protection.',
+    clue: 'Key concept: Copyright protection is automatic the instant an original work is created.'
+  },
+  {
+    type: 'truefalse', diff: 'easy',
+    who: '❓ True or False',
+    text: '"Creative Commons" means a work is completely free to use for any purpose, including selling it for profit.',
+    prompt: 'Is this statement TRUE or FALSE?',
+    answer: 'false',
+    choices: ['true','false'],
+    explain: 'FALSE! Creative Commons licenses vary — some allow commercial use, some don\'t. The "NC" (Non-Commercial) license specifically prohibits making money from the work. You must always check which specific CC license applies before using it.',
+    clue: 'Key concept: Always check the specific CC license — NC means non-commercial only!'
+  },
+  {
+    type: 'truefalse', diff: 'medium',
+    who: '❓ True or False',
+    text: 'If you add the words "no copyright intended" or "I don\'t own this" in your post, you are protected from copyright infringement.',
+    prompt: 'Is this statement TRUE or FALSE?',
+    answer: 'false',
+    choices: ['true','false'],
+    explain: 'FALSE — and this is a HUGE misconception! Writing "no copyright intended" or "all rights to the owner" has ZERO legal effect. It does not give you permission to use someone\'s work, and it does not protect you from a copyright claim. You still need actual permission or a valid license.',
+    clue: 'Key concept: "No copyright intended" is not a real legal defense. It means nothing.'
+  },
+  {
+    type: 'truefalse', diff: 'medium',
+    who: '❓ True or False',
+    text: 'A school student can use ANY copyrighted image in a class project because school use always qualifies as Fair Use.',
+    prompt: 'Is this statement TRUE or FALSE?',
+    answer: 'false',
+    choices: ['true','false'],
+    explain: 'FALSE! "Educational use" is one factor in Fair Use, but it doesn\'t automatically make everything okay. Fair Use requires weighing all four factors together. Using an entire copyrighted image in a project is much riskier than quoting a sentence from a book. Schools are not a copyright-free zone.',
+    clue: 'Key concept: Education helps the Fair Use case but doesn\'t automatically justify any use.'
+  },
+  {
+    type: 'truefalse', diff: 'hard',
+    who: '❓ True or False',
+    text: 'If a company\'s trademark or logo looks similar to yours but is used in a completely different industry (like your bakery logo vs. a car company\'s logo), there is generally no trademark conflict.',
+    prompt: 'Is this statement TRUE or FALSE?',
+    answer: 'true',
+    choices: ['true','false'],
+    explain: 'Generally TRUE! Trademark law protects against consumer confusion — if the products are totally unrelated, consumers are unlikely to confuse them. Famous marks (like Apple or Nike) get wider protection, but for most trademarks, different industries mean different markets with little chance of confusion.',
+    clue: 'Key concept: Trademark conflicts usually require similarity in BOTH the mark AND the market.'
+  },
+];
+
+// ── State ─────────────────────────────────────────────────────────────────
+let questions = [], current = 0, score = 0, streak = 0, maxStreak = 0;
+let answers = [];
+let stats = { copyright:0, trademark:0, fairuse:0, cc:0, pubdomain:0, truefalse:0 };
+let statsTotal = { copyright:0, trademark:0, fairuse:0, cc:0, pubdomain:0, truefalse:0 };
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+// ── Start ─────────────────────────────────────────────────────────────────
+function startGame() {
+  questions = shuffle(ALL_QUESTIONS);
+  current = 0; score = 0; streak = 0; maxStreak = 0; answers = [];
+  stats = { copyright:0, trademark:0, fairuse:0, cc:0, pubdomain:0, truefalse:0 };
+  statsTotal = { copyright:0, trademark:0, fairuse:0, cc:0, pubdomain:0, truefalse:0 };
+
+  document.getElementById('screen-intro').classList.remove('active');
+  document.getElementById('screen-quiz').classList.add('active');
+  renderQ();
+}
+
+// ── Render Question ───────────────────────────────────────────────────────
+function renderQ() {
+  window.scrollTo(0,0);
+  const q = questions[current];
+
+  document.getElementById('hud-q').textContent = current+1;
+  document.getElementById('hud-score').textContent = score;
+  document.getElementById('hud-streak').textContent = streak;
+  document.getElementById('hud-fill').style.width = (current/15*100)+'%';
+
+  document.getElementById('q-num').textContent = `QUESTION ${String(current+1).padStart(2,'0')} / 15`;
+
+  // type badge
+  const badge = document.getElementById('q-type-badge');
+  if (q.type === 'truefalse') {
+    badge.textContent = 'TRUE / FALSE';
+    badge.className = 'q-type-badge type-truefalse';
+  } else if (q.diff === 'hard') {
+    badge.textContent = 'TRICKY';
+    badge.className = 'q-type-badge type-quickfire';
+  } else {
+    badge.textContent = q.diff === 'easy' ? 'Scenario' : 'Scenario ★';
+    badge.className = 'q-type-badge type-scenario';
+  }
+
+  document.getElementById('q-who').textContent = q.who;
+  document.getElementById('q-text').innerHTML = q.text;
+  document.getElementById('q-prompt').textContent = q.prompt;
+
+  // reset
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback';
+  document.getElementById('next-btn').className = 'next-btn';
+
+  // choices
+  const choiceOrder = shuffle(q.choices).map(k => CATS[k]);
+  const isT = q.type === 'truefalse';
+  const choicesEl = document.getElementById('choices');
+  choicesEl.className = isT ? 'choices tf-layout' : 'choices';
+  choicesEl.innerHTML = choiceOrder.map(c => `
+    <button class="choice-btn${isT?' tf-btn':''}" onclick="answer('${c.key}')" id="ch-${c.key}">
+      <div class="ch-dot ${c.cls}">${c.emoji}</div>
+      <div class="ch-text">
+        <span class="ch-name" style="color:${c.color}">${c.label}</span>
+        ${c.sub ? `<span class="ch-sub">${c.sub}</span>` : ''}
+      </div>
+    </button>
+  `).join('');
+
+  // animate
+  const card = document.getElementById('q-card');
+  card.style.animation = 'none';
+  requestAnimationFrame(() => { card.style.animation = 'cardSlide 0.32s cubic-bezier(0.34,1.56,0.64,1) both'; });
+}
+
+// ── Answer ────────────────────────────────────────────────────────────────
+function answer(chosen) {
+  const q = questions[current];
+  const correct = chosen === q.answer;
+  answers.push({ correct, chosen, right: q.answer, q });
+
+  // stats tracking
+  const statKey = q.type === 'truefalse' ? 'truefalse' : q.answer;
+  statsTotal[statKey] = (statsTotal[statKey]||0) + 1;
+  if (correct) {
+    score++; streak++;
+    stats[statKey] = (stats[statKey]||0) + 1;
+  } else { streak = 0; }
+  if (streak > maxStreak) maxStreak = streak;
+
+  document.getElementById('hud-score').textContent = score;
+  document.getElementById('hud-streak').textContent = streak;
+
+  if (streak >= 3) {
+    const sp = document.getElementById('streak-pop');
+    sp.textContent = `🔥 ${streak} in a row!`;
+    sp.style.display = 'block';
+    setTimeout(() => sp.style.display = 'none', 2200);
+  }
+
+  // color buttons
+  document.querySelectorAll('.choice-btn').forEach(btn => {
+    btn.disabled = true;
+    const k = btn.id.replace('ch-','');
+    if (k === q.answer) btn.classList.add('correct');
+    else if (k === chosen && !correct) btn.classList.add('wrong');
+    else btn.classList.add('dimmed');
+  });
+
+  // feedback
+  const fb = document.getElementById('feedback');
+  fb.className = `feedback ${correct?'fb-c':'fb-w'} show`;
+  document.getElementById('fb-icon').textContent = correct ? '✅' : '❌';
+  document.getElementById('fb-verdict').textContent = correct ? 'Correct!' : `Not quite — the answer is ${CATS[q.answer].label}`;
+  document.getElementById('fb-verdict').className = `fb-verdict ${correct?'c':'w'}`;
+  document.getElementById('fb-explain').textContent = q.explain;
+  document.getElementById('fb-clue').innerHTML = `<strong>💡 ${q.clue}</strong>`;
+
+  const nb = document.getElementById('next-btn');
+  nb.className = 'next-btn show';
+  nb.textContent = current < 14 ? 'Next Question →' : 'See My Results →';
+}
+
+// ── Next ──────────────────────────────────────────────────────────────────
+function nextQ() {
+  current++;
+  if (current >= 15) { showResults(); return; }
+  renderQ();
+}
+
+// ── Results ───────────────────────────────────────────────────────────────
+function showResults() {
+  document.getElementById('screen-quiz').classList.remove('active');
+  document.getElementById('screen-results').classList.add('active');
+  window.scrollTo(0,0);
+
+  const pct = Math.round(score/15*100);
+  let grade, title, msg;
+  if (score===15)      { grade='A+'; title='PERFECT SCORE!'; msg='Flawless — you know your IP law inside and out. Future lawyer energy!'; }
+  else if (score>=13)  { grade='A';  title='EXCELLENT!'; msg='You have a strong command of IP concepts. Review the few you missed and you\'ll be unstoppable.'; }
+  else if (score>=12)  { grade='B+'; title='GREAT JOB!'; msg='Really solid understanding. A little more practice on the tricky ones and you\'re there.'; }
+  else if (score>=11)  { grade='B';  title='GOOD WORK!'; msg='You know the fundamentals well. Review the explanations for your missed questions.'; }
+  else if (score>=9)   { grade='C+'; title='GETTING THERE'; msg='You\'ve got the basics down but some concepts need more review. Check the slides and try again!'; }
+  else if (score>=7)   { grade='C';  title='KEEP PRACTICING'; msg='These concepts take time! Review the Week 3 slides and give it another shot.'; }
+  else                 { grade='D';  title='MORE PRACTICE NEEDED'; msg='Go back to the lesson slides, take notes on each concept, then retry the game.'; }
+
+  document.getElementById('r-title').textContent = title;
+  document.getElementById('r-title').style.color = score>=13 ? 'var(--fairuse)' : score>=9 ? 'var(--warn)' : 'var(--copyright)';
+  document.getElementById('r-sub').textContent = `${document.getElementById('s-name').value||'Student'} · ${score}/15 correct · ${pct}%`;
+  document.getElementById('r-grade').textContent = grade;
+  document.getElementById('r-grade').style.color = score>=13 ? 'var(--fairuse)' : score>=9 ? 'var(--warn)' : 'var(--copyright)';
+  document.getElementById('grade-msg') && (document.getElementById('grade-msg').textContent = msg);
+  document.getElementById('r-msg').textContent = msg;
+
+  // donut
+  const circ = 389.6;
+  const offset = circ - (score/15)*circ;
+  const ringColor = score>=13 ? '#2a9d8f' : score>=9 ? '#f59e0b' : '#e63946';
+  setTimeout(() => {
+    const dc = document.getElementById('donut-circle');
+    dc.style.strokeDashoffset = offset;
+    dc.style.stroke = ringColor;
+  }, 250);
+  document.getElementById('donut-num').textContent = score;
+  document.getElementById('donut-num').style.color = ringColor;
+
+  // breakdown
+  const bdCats = [
+    { k:'copyright',  l:'Copyright',  e:'©',  c:'var(--copyright)' },
+    { k:'trademark',  l:'Trademark',  e:'™',  c:'var(--trademark)' },
+    { k:'fairuse',    l:'Fair Use',   e:'⚖️', c:'var(--fairuse)'   },
+    { k:'cc',         l:'CC License', e:'🌐', c:'var(--cc)'        },
+    { k:'pubdomain',  l:'Pub. Domain',e:'🗽', c:'var(--pubdomain)' },
+  ];
+  document.getElementById('breakdown').innerHTML = bdCats.map(b => {
+    const correct = stats[b.k]||0;
+    const total = statsTotal[b.k]||0;
+    const pct = total > 0 ? Math.round(correct/total*100) : 0;
+    return `
+      <div class="bd-item">
+        <span class="bd-emoji">${b.e}</span>
+        <span class="bd-label">${b.l}</span>
+        <div class="bd-bar-wrap"><div class="bd-bar" style="background:${b.c}" data-pct="${pct}"></div></div>
+        <span class="bd-score">${correct}/${total}</span>
+      </div>
+    `;
+  }).join('');
+  setTimeout(() => document.querySelectorAll('.bd-bar').forEach(b => b.style.width = b.dataset.pct+'%'), 400);
+
+  // missed
+  const missed = answers.filter(a => !a.correct);
+  const ms = document.getElementById('missed-section');
+  if (missed.length) {
+    ms.innerHTML = `<div class="missed-head">📚 Review — ${missed.length} question${missed.length>1?'s':''} to revisit</div>`
+      + missed.map(a => `
+        <div class="missed-item">
+          <div class="missed-q">${a.q.text.replace(/<[^>]+>/g,'')}</div>
+          <div class="missed-ans">
+            <span class="missed-yours">✗ You: ${CATS[a.chosen].label}</span>
+            <span class="missed-correct">✓ Answer: ${CATS[a.right].label}</span>
+          </div>
+        </div>
+      `).join('');
+  } else {
+    ms.innerHTML = '<div class="missed-head" style="text-align:center;color:var(--correct)">🎉 Perfect — no missed questions!</div>';
+  }
+
+  // teacher prefill
+  document.getElementById('t-score').value = score+'/15';
+  document.getElementById('t-pct').value = pct+'%';
+  document.getElementById('t-grade').value = grade;
+}
+
+// ── Retry ─────────────────────────────────────────────────────────────────
+function retryGame() {
+  document.getElementById('screen-results').classList.remove('active');
+  document.getElementById('screen-intro').classList.add('active');
+  document.getElementById('donut-circle').style.strokeDashoffset = '389.6';
+}
+</script>
+</body>
+</html>
